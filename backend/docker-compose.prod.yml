@@ -1,0 +1,104 @@
+# Production stack. See DEPLOY.md.
+#   docker compose -f docker-compose.prod.yml up -d --build
+# Reads backend/.env (copy .env.prod.example). Only caddy is reachable from outside.
+name: forreal
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-app: &app
+  build: .
+  image: forreal-backend:prod
+  restart: unless-stopped
+  env_file: ${ENV_FILE:-.env}
+  environment:
+    # The database password lives once, in .env, as POSTGRES_PASSWORD.
+    DATABASE_URL: postgis://forreal:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/forreal
+    REDIS_URL: redis://redis:6379/0
+    STATIC_ROOT: /app/staticfiles
+  logging: *logging
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: forreal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: forreal
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forreal -d forreal"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    logging: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging: *logging
+
+  web:
+    <<: *app
+    command: >
+      sh -c "python manage.py migrate --noinput
+      && python manage.py collectstatic --clear --noinput
+      && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --access-logfile -"
+    expose: ["8000"]
+    volumes:
+      - static:/app/staticfiles
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      # Asks the way Caddy does: an allowed host name and the HTTPS marker, so the answer is 200, not a redirect.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os, urllib.request as u; u.urlopen(u.Request('http://127.0.0.1:8000/health/', headers={'Host': os.environ['ALLOWED_HOSTS'].split(',')[0].strip(), 'X-Forwarded-Proto': 'https'}), timeout=3)"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  worker:
+    <<: *app
+    # Starts after web is healthy, so migrations have run.
+    command: celery -A config worker -B -l info --schedule /tmp/celerybeat-schedule
+    depends_on:
+      web: {condition: service_healthy}
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - static:/srv/static:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web: {condition: service_healthy}
+    logging: *logging
+
+volumes:
+  pgdata:
+  static:
+  caddy_data:
+  caddy_config:

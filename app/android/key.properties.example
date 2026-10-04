@@ -1,0 +1,7 @@
+# Copy to key.properties (same folder) and fill in. key.properties and the keystore are
+# gitignored: never commit them. See "Release signing" in app/README.md.
+# storeFile is relative to app/android/.
+storeFile=upload-keystore.jks
+storePassword=
+keyAlias=upload
+keyPassword=

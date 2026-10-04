@@ -208,7 +208,11 @@ class RealStartupTests(SimpleTestCase):
 
     def start(self, **env):
         base = {k: v for k, v in os.environ.items() if k not in {"DEBUG", "OTP_SENDER", "OTP_ECHO_IN_RESPONSE", "TESTER_PHONES"}}
-        base.update({"DEBUG": "0", "SECRET_KEY": "x" * 50, "DJANGO_SETTINGS_MODULE": "config.settings"})
+        base.update({
+            "DEBUG": "0", "SECRET_KEY": "x" * 50, "REF_HASH_PEPPER": "p" * 50,
+            "ALLOWED_HOSTS": "api.example.com", "DJANGO_SETTINGS_MODULE": "config.settings",
+        })
+        base.setdefault("DATABASE_URL", "postgis://forreal:forreal@localhost:5432/forreal")
         base.update(env)
         return subprocess.run(
             [sys.executable, "-c", "import django; django.setup(); from django.conf import settings; print(len(settings.TESTER_PHONES))"],

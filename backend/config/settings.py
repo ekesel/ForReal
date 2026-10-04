@@ -5,13 +5,17 @@ from pathlib import Path
 
 import dj_database_url
 
-from config.startup import check_sign_in, parse_tester_phones
+from config.startup import check_production, check_sign_in, normalise_admin_path, parse_tester_phones
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def env_bool(name, default=False):
     return os.environ.get(name, str(default)).lower() in ("1", "true", "yes")
+
+
+def env_list(name, default=""):
+    return [v.strip() for v in os.environ.get(name, default).split(",") if v.strip()]
 
 
 DEBUG = env_bool("DEBUG", False)
@@ -23,7 +27,24 @@ if not SECRET_KEY:
 # against already-stored transactions, so set it once per environment.
 REF_HASH_PEPPER = os.environ.get("REF_HASH_PEPPER", SECRET_KEY)
 
-ALLOWED_HOSTS = [h for h in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
+# Development answers on localhost when nothing is set. Production must name its hosts.
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1" if DEBUG else "")
+# Origins (scheme and host) allowed to post forms, e.g. https://api.example.com. The admin
+# needs this when it is served over HTTPS by a proxy.
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
+# URL prefix of the Django admin. Move it off the default in production.
+ADMIN_PATH = normalise_admin_path(os.environ.get("ADMIN_PATH", "admin/"))
+
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", "postgis://forreal:forreal@localhost:5432/forreal" if DEBUG else ""
+)
+check_production(
+    debug=DEBUG,
+    secret_key=SECRET_KEY,
+    ref_hash_pepper=os.environ.get("REF_HASH_PEPPER", ""),
+    allowed_hosts=ALLOWED_HOSTS,
+    database_url=DATABASE_URL,
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -74,10 +95,7 @@ TEMPLATES = [
 ]
 
 DATABASES = {
-    "default": dj_database_url.parse(
-        os.environ.get("DATABASE_URL", "postgis://forreal:forreal@localhost:5432/forreal"),
-        conn_max_age=60,
-    )
+    "default": dj_database_url.parse(DATABASE_URL, conn_max_age=60)
 }
 DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -92,7 +110,9 @@ TIME_ZONE = "Asia/Kolkata"
 USE_I18N = False
 USE_TZ = True
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+# Where collectstatic gathers files for the web server. Django does not serve them itself
+# when DEBUG is off.
+STATIC_ROOT = Path(os.environ.get("STATIC_ROOT", BASE_DIR / "staticfiles"))
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
@@ -164,7 +184,10 @@ CELERY_BEAT_SCHEDULE = {
 }
 
 if not DEBUG:
+    # Production runs behind a proxy that terminates HTTPS and sets X-Forwarded-Proto itself.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", 31536000))
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 

@@ -63,6 +63,41 @@ dpkg --add-architecture amd64 && apt-get update && apt-get install -y libc6:amd6
 Plain HTTP is allowed in **debug builds only** (`android/app/src/debug/res/xml/network_security_config.xml`).
 A release build has no such configuration and refuses cleartext traffic, so it needs an `https://` backend.
 
+## Release signing
+
+Debug builds are signed with the debug key and need no setup. A release build is signed with your
+own keystore, named in `android/key.properties`. Both files are gitignored. Without
+`key.properties` a release build stops with "Release signing is not set up" rather than falling
+back to the debug key.
+
+Create the keystore once. Run this yourself in a terminal; it asks for a password and your name:
+
+```bash
+docker exec -it forreal-flutter keytool -genkeypair -v \
+  -keystore /work/app/android/upload-keystore.jks \
+  -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+
+(With a JDK on the host, run `keytool` directly with `-keystore app/android/upload-keystore.jks`.)
+
+Then tell the build about it:
+
+```bash
+cp android/key.properties.example android/key.properties
+# edit android/key.properties: storePassword and keyPassword are the password you just chose
+```
+
+Build:
+
+```bash
+flutter build apk --release --dart-define=API_BASE_URL=https://your-host
+# build/app/outputs/flutter-apk/app-release.apk
+```
+
+Keep a copy of the keystore and its password somewhere safe outside this folder. Every update of
+the app must be signed with the same key: if it is lost, installed copies can no longer be
+updated, only uninstalled and reinstalled, which wipes their local data.
+
 ## Run against a local backend from a physical phone
 
 1. Put the phone and the computer on the same Wi-Fi. Find the computer's LAN address, for example
@@ -78,7 +113,7 @@ A release build has no such configuration and refuses cleartext traffic, so it n
    ```bash
    flutter run --dart-define=API_BASE_URL=http://192.168.1.20:8000
    ```
-4. With `OTP_ECHO_IN_RESPONSE=1` the debug build fills in the sign-in code for you. Otherwise read
+4. With `OTP_ECHO_IN_RESPONSE=1` the app fills in the sign-in code for you. Otherwise read
    it from the backend log (`docker compose logs web | grep OTP`).
 
 On an emulator, skip steps 1 and 2 and use the default address. Send a test bank message with:
@@ -263,7 +298,7 @@ UPI debit messages (the only seeded template). Have a second way to see the serv
 `http://<host>:8000/admin/`.
 
 1. **Fresh install.** Uninstall any old build, install, open. Expect the dark welcome screen.
-2. **Sign in.** *Get started*, enter the number, *Send code*, enter the code (prefilled in debug when
+2. **Sign in.** *Get started*, enter the number, *Send code*, enter the code (prefilled when
    the backend echoes it), *Verify*. Expect onboarding "1 of 5". In the admin, a Device row exists for the user.
 3. **Consents.**
    - Step 1: *Allow and continue*, then allow in Android's SMS prompt. (*Not now* explains that this
@@ -324,4 +359,3 @@ needs Android: the SMS receiver, WorkManager, notifications, permissions.
   from the server show the amount range.
 - OEM battery managers (Xiaomi, Oppo, Vivo and others) can delay or block background work for apps
   the user has not exempted. The payment is still processed the next time the app is opened.
-- Release signing is not configured; release builds are signed with the debug key.

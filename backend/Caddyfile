@@ -1,0 +1,32 @@
+# Terminates HTTPS for the host name in DOMAIN and gets its certificate automatically.
+# Plain HTTP on port 80 is redirected to HTTPS by Caddy itself.
+{$DOMAIN} {
+	encode zstd gzip
+
+	# A worst-case ingest batch (200 rows) is about 220 KB. Larger bodies are refused with 413.
+	request_body {
+		max_size 1MB
+	}
+
+	# Set only where the application has not already set them (static files, errors).
+	header {
+		?Strict-Transport-Security "max-age=31536000"
+		?X-Content-Type-Options "nosniff"
+		?X-Frame-Options "DENY"
+		?Referrer-Policy "same-origin"
+		-Server
+	}
+
+	# Files gathered by collectstatic (the admin's CSS and JS).
+	handle_path /static/* {
+		root * /srv/static
+		header Cache-Control "public, max-age=3600"
+		file_server
+	}
+
+	handle {
+		reverse_proxy web:8000
+	}
+
+	log
+}

@@ -10,6 +10,8 @@ import re
 E164 = re.compile(r"^\+[1-9]\d{7,14}$")
 CONSOLE_SENDER = "apps.accounts.otp.ConsoleOtpSender"
 MAX_TESTER_PHONES = 10
+MIN_SECRET_KEY_LENGTH = 50
+ADMIN_PATH_FORMAT = re.compile(r"^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$")
 
 
 class StartupError(RuntimeError):
@@ -95,3 +97,38 @@ def check_sender_class(*, debug, tester_phones, otp_sender):
             f"OTP_SENDER '{otp_sender}' is the console sender with DEBUG off: no code would ever reach "
             "a user. Configure a real SMS sender, or set TESTER_PHONES for closed testing."
         )
+
+
+def check_production(*, debug, secret_key, ref_hash_pepper, allowed_hosts, database_url):
+    """Refuse to start with DEBUG off unless the settings every deployment needs are present.
+
+    Development falls back to insecure defaults for all of these; production must not.
+    Every problem is reported at once so a new .env can be fixed in one pass.
+    """
+    if debug:
+        return
+    problems = []
+    if len(secret_key or "") < MIN_SECRET_KEY_LENGTH:
+        problems.append(f"SECRET_KEY must be set and at least {MIN_SECRET_KEY_LENGTH} characters long.")
+    if not ref_hash_pepper:
+        problems.append("REF_HASH_PEPPER must be set.")
+    elif ref_hash_pepper == secret_key:
+        problems.append("REF_HASH_PEPPER must be different from SECRET_KEY.")
+    if not allowed_hosts:
+        problems.append("ALLOWED_HOSTS must list the host names this deployment serves.")
+    if not database_url:
+        problems.append("DATABASE_URL must be set.")
+    if problems:
+        raise StartupError("Refusing to start with DEBUG off: " + " ".join(problems))
+
+
+def normalise_admin_path(raw):
+    """ADMIN_PATH as a URL prefix: no leading slash, one trailing slash. Empty means admin/."""
+    path = (raw or "").strip().strip("/")
+    if not path:
+        return "admin/"
+    if not ADMIN_PATH_FORMAT.match(path):
+        raise StartupError(
+            f"ADMIN_PATH '{raw}' may only contain letters, digits, '-', '_' and '/' between segments."
+        )
+    return path + "/"

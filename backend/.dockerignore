@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+!.env.prod.example
+__pycache__/
+*.pyc
+celerybeat-schedule
+staticfiles/
+.omc/
+.git
