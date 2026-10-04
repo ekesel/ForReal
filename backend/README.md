@@ -27,7 +27,7 @@ python manage.py createsuperuser      # phone + password, for /admin/
 python manage.py runserver
 ```
 
-Tests (101, need a PostGIS database the user may create databases on):
+Tests (117, need a PostGIS database the user may create databases on):
 
 ```bash
 DEBUG=1 python manage.py test apps
@@ -68,6 +68,7 @@ All endpoints are under `/api/v1/` and need `Authorization: Bearer <access>` exc
 | `GET parser-templates/?version=` | SMS templates; `changed: false` when the app is up to date |
 | `POST transactions/batch/` | Ingest up to 200 parsed payments |
 | `GET transactions/`, `GET transactions/{id}/` | The user's own payments (cursor paginated) |
+| `POST transactions/{id}/location/` | `{lat, lng}` for a payment ingested without a location; needs the `location` consent. First location wins, later calls change nothing |
 | `GET payees/pending/` | Payees not yet labelled shop or person |
 | `GET payees/{id}/suggestions/?lat=&lng=` | Shops other users confirmed for this payee nearby |
 | `POST payees/{id}/resolve/` | `{kind: person}` or `{kind: merchant, merchant_id}` or `{kind: merchant, new_merchant: {name, category, is_online}}`, plus optional `lat`, `lng` |
@@ -76,6 +77,11 @@ All endpoints are under `/api/v1/` and need `Authorization: Bearer <access>` exc
 | `GET transactions/{id}/suggestions/` | Item guesses and whether to prompt |
 | `PUT transactions/{id}/items/` | `{items: [{item_id or name, quantity}]}` replaces the tags |
 | `POST transactions/{id}/items/confirm/` | The one-tap "Yes" |
+
+Payment endpoints answer 403 `{"code": "consent_required", "detail": "..."}` while the user lacks the
+`private_analytics` consent, and `transactions/{id}/location/` answers 403 with code
+`location_consent_required` without the `location` consent. Token refresh answers 401 with code
+`no_active_account` for a deleted or disabled account.
 
 ### Ingest row
 

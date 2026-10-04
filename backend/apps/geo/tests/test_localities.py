@@ -5,7 +5,6 @@ from unittest import mock
 
 import redis
 import requests
-from celery import current_app
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
@@ -63,10 +62,6 @@ class EagerCeleryMixin:
     def setUp(self):
         super().setUp()
         FakeGeocoder.reset()
-        # The Celery app read its config at start-up, so set the flag on it as well.
-        previous = current_app.conf.task_always_eager
-        current_app.conf.task_always_eager = True
-        self.addCleanup(setattr, current_app.conf, "task_always_eager", previous)
         # Keep per-task result lines and expected retry tracebacks out of the test output.
         trace_log = logging.getLogger("celery.app.trace")
         self.addCleanup(trace_log.setLevel, trace_log.level)

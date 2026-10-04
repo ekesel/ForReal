@@ -106,6 +106,8 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=60),
     "ROTATE_REFRESH_TOKENS": True,
     "USER_ID_FIELD": "id",
+    # Answers 401, not 500, when the token's user was deleted.
+    "TOKEN_REFRESH_SERIALIZER": "apps.accounts.tokens.RefreshSerializer",
 }
 
 # --- OTP -------------------------------------------------------------------

@@ -63,3 +63,26 @@ class ConsentTests(ApiTestCase):
         res = c.post(f"{API}/transactions/batch/", {"transactions": [self.row()]}, format="json")
         self.assertEqual(res.status_code, 403)
         self.assertEqual(c.get(f"{API}/transactions/").status_code, 403)
+
+    def test_missing_private_analytics_consent_is_a_403_with_a_code(self):
+        c = self.client_for(self.make_user(consents=[]))
+        message = "Grant the 'private_analytics' consent before sending or reading payment data."
+        guarded = [
+            c.post(f"{API}/transactions/batch/", {"transactions": [self.row()]}, format="json"),
+            c.get(f"{API}/transactions/"),
+            c.get(f"{API}/payees/pending/"),
+        ]
+        for res in guarded:
+            self.assertEqual(res.status_code, 403)
+            self.assertEqual(res.json(), {"code": "consent_required", "detail": message})
+
+    def test_other_403s_do_not_carry_the_consent_code(self):
+        user = self.make_user(consents=["private_analytics"])
+        txn_id = self.pay(user, lat=None, lng=None)["transaction"]["id"]
+        res = self.client_for(user).post(f"{API}/transactions/{txn_id}/location/", {"lat": 28.6, "lng": 77.3}, format="json")
+        self.assertEqual(res.status_code, 403)
+        self.assertEqual(res.json()["code"], "location_consent_required")
+
+    def test_unauthenticated_requests_to_guarded_endpoints_stay_401(self):
+        res = self.client.post(f"{API}/transactions/batch/", {"transactions": [self.row()]}, format="json")
+        self.assertEqual(res.status_code, 401)

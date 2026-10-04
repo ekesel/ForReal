@@ -63,6 +63,42 @@
   },
   "hotPaths": [
     {
+      "path": "app/lib/core/router.dart",
+      "accessCount": 2,
+      "lastAccessed": 1791129725470,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/core/providers.dart",
+      "accessCount": 2,
+      "lastAccessed": 1791129768759,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/features/app/app_coordinator.dart",
+      "accessCount": 2,
+      "lastAccessed": 1791129773067,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/data/models.dart",
+      "accessCount": 2,
+      "lastAccessed": 1791129773130,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/features/session/session_controller.dart",
+      "accessCount": 2,
+      "lastAccessed": 1791129792745,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/features/location/location_service.dart",
+      "accessCount": 2,
+      "lastAccessed": 1791130152338,
+      "type": "file"
+    },
+    {
       "path": "apps/geo/geocoding.py",
       "accessCount": 1,
       "lastAccessed": 1791106691071,
@@ -168,6 +204,162 @@
       "path": "apps/merchants/views.py",
       "accessCount": 1,
       "lastAccessed": 1791106815373,
+      "type": "file"
+    },
+    {
+      "path": "app/android/app/src/main/kotlin/com/forreal/app/capture/SmsReceiver.kt",
+      "accessCount": 1,
+      "lastAccessed": 1791116808267,
+      "type": "file"
+    },
+    {
+      "path": "app/android/app/src/main/kotlin/com/forreal/app/capture/CaptureWorker.kt",
+      "accessCount": 1,
+      "lastAccessed": 1791116808896,
+      "type": "file"
+    },
+    {
+      "path": "app/android/app/src/main/kotlin/com/forreal/app/capture/CaptureChannel.kt",
+      "accessCount": 1,
+      "lastAccessed": 1791116809476,
+      "type": "file"
+    },
+    {
+      "path": "app/android/app/src/main/kotlin/com/forreal/app/capture/CaptureDispatcher.kt",
+      "accessCount": 1,
+      "lastAccessed": 1791116810076,
+      "type": "file"
+    },
+    {
+      "path": "app/android/app/src/main/kotlin/com/forreal/app/capture/CaptureStore.kt",
+      "accessCount": 1,
+      "lastAccessed": 1791116810647,
+      "type": "file"
+    },
+    {
+      "path": "app/android/app/src/main/kotlin/com/forreal/app/capture/SmsHistory.kt",
+      "accessCount": 1,
+      "lastAccessed": 1791116811309,
+      "type": "file"
+    },
+    {
+      "path": "app/android/app/src/main/kotlin/com/forreal/app/capture/SenderFilter.kt",
+      "accessCount": 1,
+      "lastAccessed": 1791116811984,
+      "type": "file"
+    },
+    {
+      "path": "app/android/app/src/main/kotlin/com/forreal/app/MainActivity.kt",
+      "accessCount": 1,
+      "lastAccessed": 1791116812536,
+      "type": "file"
+    },
+    {
+      "path": "app/android/app/src/main/AndroidManifest.xml",
+      "accessCount": 1,
+      "lastAccessed": 1791116817866,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/features/sync/sync_service.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116819034,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/features/notifications/prompts.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116819512,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/data/api/api_client.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116821237,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/data/local_store.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116821795,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/capture/capture_pipeline.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116828051,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/capture/background_runner.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116828517,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/features/notifications/local_notifications.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116829515,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/features/notifications/notification_answers.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116830190,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/data/api/repositories.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116831216,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/background.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116831700,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/data/secret_store.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116840111,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/bootstrap.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116841119,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/capture/derived.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116841595,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/capture/android_sms_source.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116842053,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/capture/template_sync.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116842524,
+      "type": "file"
+    },
+    {
+      "path": "app/lib/capture/parser.dart",
+      "accessCount": 1,
+      "lastAccessed": 1791116842953,
+      "type": "file"
+    },
+    {
+      "path": "backend/apps/transactions/serializers.py",
+      "accessCount": 1,
+      "lastAccessed": 1791116850830,
       "type": "file"
     }
   ],

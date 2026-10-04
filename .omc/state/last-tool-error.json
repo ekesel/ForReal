@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"grep -rn 'on_commit.*robust' apps/ 2>/dev/null; echo \\\"---\\\"; grep -rn 'def on_commit' /Users/ekesel/Desktop/projects/forreal-backend/.venv/lib/python*/site-packages/django/db/transaction....",
-  "error": "Exit code 1\napps/geo/services.py:95:    transaction.on_commit(lambda: assign_locality.delay(label, pk), robust=True)\n---\n(eval):1: no matches found: /Users/ekesel/Desktop/projects/forreal-backend/.venv/lib/python*/site-packages/django/db/transaction.py",
-  "timestamp": "2026-10-04T09:39:16.224Z",
-  "retry_count": 2
-}

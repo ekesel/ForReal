@@ -47,6 +47,11 @@ class IngestBatchSerializer(serializers.Serializer):
         return rows
 
 
+class LocationSerializer(serializers.Serializer):
+    lat = serializers.FloatField(min_value=-90, max_value=90)
+    lng = serializers.FloatField(min_value=-180, max_value=180)
+
+
 class TransactionSerializer(serializers.ModelSerializer):
     payee = serializers.SerializerMethodField()
     merchant = MerchantSerializer(read_only=True)

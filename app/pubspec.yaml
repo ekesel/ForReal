@@ -1,0 +1,63 @@
+name: forreal
+description: "ForReal: payments captured on the device, tagged with what was bought."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # State and navigation.
+  flutter_riverpod: ^3.4.3
+  go_router: ^17.5.0
+  # Backend API.
+  dio: ^5.11.1
+  # Local database: drift on SQLCipher (see the hooks section below).
+  drift: ^2.35.1
+  sqlite3: ^3.5.2
+  path_provider: ^2.1.6
+  path: ^1.9.1
+  # Database key and JWTs in the Android Keystore.
+  flutter_secure_storage: ^11.2.0
+  # Prompts.
+  flutter_local_notifications: ^22.3.1
+  timezone: ^0.11.1
+  # Coarse, foreground-only location.
+  geolocator: ^14.0.1
+  # Client transaction ids (UUIDv5).
+  uuid: ^4.6.0
+  # Dates and currency.
+  intl: ^0.20.3
+  # "Export my data" through the share sheet.
+  share_plus: ^13.3.1
+  # Sync when the connection returns.
+  connectivity_plus: ^7.3.1
+  # App version for device registration.
+  package_info_plus: ^10.2.2
+  # Bricolage Grotesque and DM Sans, loaded from bundled assets (no runtime fetching).
+  google_fonts: ^8.2.1
+  # The icon set the designs are drawn with (maintained fork; the original
+  # lucide_icons package does not compile with current Flutter).
+  lucide_icons_flutter: ^3.1.21
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.35.1
+  build_runner: ^2.15.1
+
+# package:sqlite3 bundles its SQLite build through a build hook. Select the SQLCipher
+# build so the local database is encrypted. (This replaces sqlcipher_flutter_libs,
+# which is end-of-life and does nothing with sqlite3 3.x.)
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlcipher
+
+flutter:
+  uses-material-design: true
+  # Font files for google_fonts, bundled so the app never fetches fonts over the network.
+  assets:
+    - google_fonts/

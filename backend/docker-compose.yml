@@ -1,3 +1,5 @@
+name: forreal-backend
+
 services:
   db:
     image: postgis/postgis:16-3.4

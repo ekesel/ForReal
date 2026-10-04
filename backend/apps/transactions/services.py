@@ -89,6 +89,20 @@ def _ingest_one(user, row, use_location, links, geocode_queued):
     return {"status": status, "transaction": txn}
 
 
+@transaction.atomic
+def attach_location(txn, lat, lng):
+    """Give a payment the location it was ingested without (the app only has a fix in
+    the foreground). The first location wins: a payment that already has one is left alone."""
+    txn = Transaction.objects.select_for_update().get(pk=txn.pk)
+    if txn.location is None:
+        txn.location = coarse_point(lat, lng)
+        txn.locality = Locality.objects.for_point(txn.location)
+        txn.save(update_fields=["location", "locality"])
+        # Same as ingest: an unknown area is named in the background, after the commit.
+        enqueue_locality(txn)
+    return txn
+
+
 def payee_prompt(txn):
     """What the app should ask about this payment, if anything."""
     if txn.kind == Kind.UNKNOWN:
