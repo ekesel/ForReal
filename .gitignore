@@ -7,3 +7,5 @@ staticfiles/
 .idea/
 .vscode/
 *.log
+.omc/
+app/.omc/*

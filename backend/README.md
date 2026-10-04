@@ -27,7 +27,7 @@ python manage.py createsuperuser      # phone + password, for /admin/
 python manage.py runserver
 ```
 
-Tests (117, need a PostGIS database the user may create databases on):
+Tests (143, need a PostGIS database the user may create databases on):
 
 ```bash
 DEBUG=1 python manage.py test apps
@@ -174,4 +174,7 @@ python manage.py backfill_localities --regeocode-provider nominatim   # first fo
 ## Before real users
 
 Set `DEBUG=0`, a long random `SECRET_KEY`, a separate `REF_HASH_PEPPER`, `OTP_ECHO_IN_RESPONSE=0`,
-real `ALLOWED_HOSTS`, `NOMINATIM_USER_AGENT` with a real contact, and serve behind HTTPS.
+real `ALLOWED_HOSTS`, `NOMINATIM_USER_AGENT` with a real contact, a real SMS sender in `OTP_SENDER`,
+and serve behind HTTPS. With `DEBUG=0` the process refuses to start if codes would be echoed or
+only logged. [DEPLOY.md](DEPLOY.md) has the full list, and the closed-testing mode (`TESTER_PHONES`)
+for trying a deployment with a few named people before an SMS provider is set up.

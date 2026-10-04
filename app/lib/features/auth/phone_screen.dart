@@ -8,8 +8,12 @@ import '../../core/widgets.dart';
 import '../../data/api/api_exception.dart';
 import 'otp_screen.dart';
 
+/// The backend is in closed testing and this number is not on its list.
+const notInvitedMessage = 'This number isn’t on the test list. Ask the ForReal team to add it.';
+
 /// What to tell the user when asking for a code fails.
 String otpRequestError(ApiException e) {
+  if (e.code == 'not_invited') return notInvitedMessage;
   if (e.fieldErrors['phone'] != null) return 'Enter a valid mobile number.';
   if (e.isRateLimited) {
     return e.code == 'too_many_requests'

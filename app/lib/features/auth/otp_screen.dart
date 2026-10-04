@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,7 +15,8 @@ class OtpArgs {
   const OtpArgs({required this.phone, this.debugCode});
   final String phone;
 
-  /// Only sent by a development backend (OTP_ECHO_IN_RESPONSE).
+  /// Sent by a development backend (OTP_ECHO_IN_RESPONSE) or one in closed testing
+  /// (TESTER_PHONES), where no SMS goes out and this is the only way to get the code.
   final String? debugCode;
 }
 
@@ -27,6 +27,7 @@ String otpVerifyError(ApiException e) => switch (e.code) {
       'expired' => 'That code has expired. Ask for a new one.',
       'too_many_attempts' => 'Too many wrong attempts. Ask for a new code.',
       'inactive' => 'This account has been disabled.',
+      'not_invited' => notInvitedMessage,
       _ => e.isRateLimited ? 'Too many attempts. Please wait a few minutes and try again.' : e.message,
     };
 
@@ -60,8 +61,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   @override
   void initState() {
     super.initState();
-    // Debug builds only: prefill the code a development backend echoes back.
-    _code = TextEditingController(text: kDebugMode ? widget.args.debugCode ?? '' : '');
+    // Prefill the code whenever the server sends one, in every build: a closed-testing
+    // backend sends no SMS, so testers on a release build have no other way to get it.
+    _code = TextEditingController(text: widget.args.debugCode ?? '');
     _code.addListener(() => setState(() {}));
     _focus.addListener(() => setState(() {}));
     _startCountdown();
@@ -105,7 +107,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     try {
       final result = await ref.read(authApiProvider).requestOtp(widget.args.phone);
       if (!mounted) return;
-      if (kDebugMode && result.debugCode != null) _code.text = result.debugCode!;
+      if (result.debugCode != null) _code.text = result.debugCode!;
       setState(() => _error = null);
       _startCountdown();
       showMessage(context, 'A new code is on its way.');

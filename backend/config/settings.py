@@ -5,6 +5,8 @@ from pathlib import Path
 
 import dj_database_url
 
+from config.startup import check_sign_in, parse_tester_phones
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -117,6 +119,12 @@ OTP_MAX_ATTEMPTS = 5
 OTP_MAX_REQUESTS_PER_HOUR = 5
 # Returns the code in the API response. Development only.
 OTP_ECHO_IN_RESPONSE = env_bool("OTP_ECHO_IN_RESPONSE", DEBUG)
+# Closed testing: comma-separated E.164 numbers. When set, only these numbers can sign
+# in, and they get the code in the response instead of by SMS. See DEPLOY.md.
+TESTER_PHONES = parse_tester_phones(os.environ.get("TESTER_PHONES", ""))
+check_sign_in(
+    debug=DEBUG, otp_sender=OTP_SENDER, otp_echo=OTP_ECHO_IN_RESPONSE, tester_phones=TESTER_PHONES
+)
 
 # --- Product rules ---------------------------------------------------------
 # Coordinates are rounded to this many decimals before storage (3 = ~110 m).

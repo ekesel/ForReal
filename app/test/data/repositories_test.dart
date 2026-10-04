@@ -397,6 +397,19 @@ void main() {
     }
   });
 
+  test('a closed-testing refusal is an ordinary 403 with its own code', () async {
+    backend.api.reply('POST', 'auth/otp/request/',
+        {'code': 'not_invited', 'detail': 'This number is not on the test list.'},
+        status: 403);
+    await expectLater(
+      AuthApi(backend.client, backend.tokens).requestOtp('+919812345678'),
+      throwsA(isA<ApiException>()
+          .having((e) => e.code, 'code', 'not_invited')
+          .having((e) => e.isConsentRequired, 'not the consent case', isFalse)
+          .having((e) => e.isRetryable, 'not retryable', isFalse)),
+    );
+  });
+
   test('no connection is a network error on any repository', () async {
     backend.api.on('GET', 'categories/', (_) => throw const Offline());
     await expectLater(

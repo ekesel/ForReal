@@ -10,6 +10,12 @@ from .models import Device, User
 from .serializers import DeviceSerializer, OtpRequestSerializer, OtpVerifySerializer, UserSerializer
 
 
+def _otp_error(e, default_status):
+    """Not being on the closed-testing list is a 403, whichever endpoint was called."""
+    code = status.HTTP_403_FORBIDDEN if e.code == "not_invited" else default_status
+    return Response({"code": e.code, "detail": e.message}, status=code)
+
+
 class OtpRequestView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -21,9 +27,10 @@ class OtpRequestView(APIView):
         try:
             code = otp.request_otp(s.validated_data["phone"])
         except otp.OtpError as e:
-            return Response({"code": e.code, "detail": e.message}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return _otp_error(e, status.HTTP_429_TOO_MANY_REQUESTS)
         body = {"detail": "Code sent.", "expires_in": settings.OTP_TTL_SECONDS}
-        if settings.OTP_ECHO_IN_RESPONSE:
+        # Closed testing sends no SMS, so the response is the only way to get the code.
+        if settings.OTP_ECHO_IN_RESPONSE or otp.closed_testing():
             body["debug_code"] = code
         return Response(body)
 
@@ -40,7 +47,7 @@ class OtpVerifyView(APIView):
         try:
             otp.verify_otp(phone, s.validated_data["code"])
         except otp.OtpError as e:
-            return Response({"code": e.code, "detail": e.message}, status=status.HTTP_400_BAD_REQUEST)
+            return _otp_error(e, status.HTTP_400_BAD_REQUEST)
         user = User.objects.filter(phone=phone).first()
         is_new = user is None
         if is_new:

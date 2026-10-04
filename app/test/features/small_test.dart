@@ -42,6 +42,10 @@ void main() {
         'Enter a valid mobile number.',
       );
       expect(otpRequestError(const ApiException(message: 'No connection')), 'No connection');
+      expect(
+        otpRequestError(const ApiException(statusCode: 403, code: 'not_invited', message: 'server text')),
+        contains('isn’t on the test list'),
+      );
     });
 
     test('checking a code', () {
@@ -51,6 +55,7 @@ void main() {
       expect(text('expired'), contains('expired'));
       expect(text('too_many_attempts'), contains('Too many wrong attempts'));
       expect(text('inactive', 403), contains('disabled'));
+      expect(text('not_invited', 403), contains('isn’t on the test list'));
       expect(otpVerifyError(const ApiException(statusCode: 429, message: 'throttled')), contains('wait'));
       expect(otpVerifyError(const ApiException(statusCode: 500, message: 'server text')), 'server text');
     });

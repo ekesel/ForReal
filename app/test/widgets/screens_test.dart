@@ -5,6 +5,8 @@ import 'package:forreal/capture/transaction_source.dart';
 import 'package:forreal/core/providers.dart';
 import 'package:forreal/core/widgets.dart';
 import 'package:forreal/data/models.dart';
+import 'package:forreal/features/auth/otp_screen.dart';
+import 'package:forreal/features/auth/phone_screen.dart';
 import 'package:forreal/features/auth/welcome_screen.dart';
 import 'package:forreal/features/home/coming_soon_screen.dart';
 import 'package:forreal/features/home/home_screen.dart';
@@ -67,6 +69,59 @@ void main() {
       expect(find.text('Your name stays hidden. Always your call.'), findsOneWidget);
       // Dark in both themes.
       expect(tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor, AppColors.light.ink);
+    });
+  });
+
+  group('sign-in', () {
+    testWidgets('a number that is not on the closed-testing list gets a friendly message', (tester) async {
+      h.api.reply('POST', 'auth/otp/request/',
+          {'code': 'not_invited', 'detail': 'This number is not on the test list.'},
+          status: 403);
+      await tester.pumpWidget(app(tester, const PhoneScreen(), size: const Size(412, 892)));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '9812345678');
+      await tapAsync(tester, find.text('Send code'));
+      expect(find.textContaining('isn’t on the test list'), findsOneWidget);
+      expect(find.text('What’s your number?'), findsOneWidget, reason: 'still on the phone screen');
+    });
+
+    testWidgets('the code screen fills in a code the server sent', (tester) async {
+      await tester.pumpWidget(app(
+        tester,
+        const OtpScreen(args: OtpArgs(phone: '+919876543210', debugCode: '482913')),
+        size: const Size(412, 892),
+      ));
+      await tester.pump();
+      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, '482913');
+      for (final digit in ['4', '8', '2', '9', '1', '3']) {
+        expect(find.text(digit), findsOneWidget);
+      }
+      expect(find.text('Sent to +91 98765 43210'), findsOneWidget);
+    });
+
+    testWidgets('the code screen is empty when the server sent no code', (tester) async {
+      await tester.pumpWidget(
+          app(tester, const OtpScreen(args: OtpArgs(phone: '+919876543210')), size: const Size(412, 892)));
+      await tester.pump();
+      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, isEmpty);
+    });
+
+    testWidgets('a refusal while verifying shows the same message', (tester) async {
+      h.api.reply('POST', 'auth/otp/verify/',
+          {'code': 'not_invited', 'detail': 'This number is not on the test list.'},
+          status: 403);
+      await tester.pumpWidget(app(
+        tester,
+        const OtpScreen(args: OtpArgs(phone: '+919812345678', debugCode: '482913')),
+        size: const Size(412, 892),
+      ));
+      await tester.pump();
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Verify'));
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+      });
+      await tester.pump();
+      expect(find.textContaining('isn’t on the test list'), findsOneWidget);
     });
   });
 

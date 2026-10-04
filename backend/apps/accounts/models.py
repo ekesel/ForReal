@@ -9,7 +9,9 @@ phone_validator = RegexValidator(r"^\+[1-9]\d{7,14}$", "Phone must be in E.164 f
 
 def normalize_phone(raw: str) -> str:
     """Accepts +91XXXXXXXXXX, 91XXXXXXXXXX or a bare 10-digit Indian number."""
-    digits = "".join(ch for ch in (raw or "") if ch.isdigit())
+    # ASCII digits only: str.isdigit() also accepts digits of other scripts, which no
+    # SMS provider could deliver to.
+    digits = "".join(ch for ch in (raw or "") if ch in "0123456789")
     if (raw or "").strip().startswith("+"):
         return "+" + digits
     if len(digits) == 10:

@@ -15,7 +15,7 @@ class ApiException implements Exception {
 
   /// The backend's machine-readable `code`, when it sends one
   /// (too_many_requests, expired, invalid, too_many_attempts, inactive, dependency, not_taggable,
-  /// consent_required, location_consent_required, no_active_account, token_not_valid).
+  /// consent_required, location_consent_required, no_active_account, token_not_valid, not_invited).
   final String? code;
 
   /// Something that can be shown to the user.
