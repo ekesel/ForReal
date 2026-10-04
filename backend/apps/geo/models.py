@@ -35,3 +35,29 @@ class Locality(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.city}"
+
+
+class GeocodeCell(models.Model):
+    """Remembers the reverse-geocoding answer for one coarse point, so each ~110 m cell
+    is looked up at most once, including cells where the provider found nothing.
+    Holds no reference to any user."""
+
+    class Status(models.TextChoices):
+        RESOLVED = "resolved"
+        NO_RESULT = "no_result"
+
+    # The coarse point itself, rounded to settings.LOCATION_DECIMALS.
+    lat = models.DecimalField(max_digits=9, decimal_places=6)
+    lng = models.DecimalField(max_digits=9, decimal_places=6)
+    locality = models.ForeignKey(Locality, on_delete=models.SET_NULL, null=True, blank=True, related_name="cells")
+    status = models.CharField(max_length=10, choices=Status.choices)
+    # Which adapter answered, so cells can be re-resolved after switching adapters.
+    provider = models.CharField(max_length=40)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["lat", "lng"], name="uniq_geocode_cell")]
+        indexes = [models.Index(fields=["provider", "status"])]
+
+    def __str__(self):
+        return f"{self.lat}, {self.lng} ({self.status})"

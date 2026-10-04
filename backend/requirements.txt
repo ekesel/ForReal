@@ -5,4 +5,5 @@ dj-database-url>=2.2
 psycopg[binary]>=3.2
 celery>=5.4
 redis>=5.0
+requests>=2.32
 gunicorn>=22.0

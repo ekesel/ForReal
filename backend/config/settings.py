@@ -133,8 +133,20 @@ AUTO_TAG_AFTER_CONFIRMATIONS = 3
 INGEST_MAX_BATCH = 200
 LOCALITY_FALLBACK_RADIUS_M = 3000
 
+# --- Geocoding -------------------------------------------------------------
+# Dotted path to the reverse geocoder that names new localities.
+# apps.geo.geocoding.NullGeocoder switches geocoding off.
+GEOCODER_BACKEND = os.environ.get("GEOCODER_BACKEND", "apps.geo.geocoding.NominatimGeocoder")
+NOMINATIM_BASE_URL = os.environ.get("NOMINATIM_BASE_URL", "https://nominatim.openstreetmap.org")
+# Required by the Nominatim usage policy, e.g. "ForReal/0.1 (you@example.com)".
+# No request is sent while this is empty.
+NOMINATIM_USER_AGENT = os.environ.get("NOMINATIM_USER_AGENT", "")
+# For the future GoogleGeocoder. Unused for now.
+GOOGLE_MAPS_API_KEY = os.environ.get("GOOGLE_MAPS_API_KEY", "")
+
 # --- Celery ----------------------------------------------------------------
-CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_TASK_ALWAYS_EAGER = env_bool("CELERY_TASK_ALWAYS_EAGER", False)
 CELERY_BEAT_SCHEDULE = {

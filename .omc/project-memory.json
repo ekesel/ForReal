@@ -1,0 +1,175 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1791106056398,
+  "projectRoot": "/Users/ekesel/Desktop/projects/forreal-backend",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "requirements.txt"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "pip",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "apps": {
+      "path": "apps",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1791106056386,
+      "keyFiles": [
+        "__init__.py"
+      ]
+    },
+    "config": {
+      "path": "config",
+      "purpose": "Configuration files",
+      "fileCount": 5,
+      "lastAccessed": 1791106056386,
+      "keyFiles": [
+        "__init__.py",
+        "celery.py",
+        "settings.py",
+        "urls.py",
+        "wsgi.py"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "apps/geo/geocoding.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106691071,
+      "type": "file"
+    },
+    {
+      "path": "apps/geo/services.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106691584,
+      "type": "file"
+    },
+    {
+      "path": "apps/geo/tasks.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106692126,
+      "type": "file"
+    },
+    {
+      "path": "apps/geo/tests/test_localities.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106692642,
+      "type": "file"
+    },
+    {
+      "path": "apps/geo/migrations/0002_geocodecell.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106693401,
+      "type": "file"
+    },
+    {
+      "path": "apps/geo/models.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106700092,
+      "type": "file"
+    },
+    {
+      "path": "apps/common/geo.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106700570,
+      "type": "file"
+    },
+    {
+      "path": "apps/transactions/services.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106701099,
+      "type": "file"
+    },
+    {
+      "path": "apps/merchants/services.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106701575,
+      "type": "file"
+    },
+    {
+      "path": "apps/common/testing.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106702051,
+      "type": "file"
+    },
+    {
+      "path": "apps/geo/management/commands/backfill_localities.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106705899,
+      "type": "file"
+    },
+    {
+      "path": "apps/consents/services.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106706393,
+      "type": "file"
+    },
+    {
+      "path": "apps/transactions/models.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106706846,
+      "type": "file"
+    },
+    {
+      "path": "apps/merchants/models.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106707328,
+      "type": "file"
+    },
+    {
+      "path": "config/settings.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106707803,
+      "type": "file"
+    },
+    {
+      "path": "apps/transactions/serializers.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106805382,
+      "type": "file"
+    },
+    {
+      "path": "apps/merchants/serializers.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106805804,
+      "type": "file"
+    },
+    {
+      "path": "apps/merchants/views.py",
+      "accessCount": 1,
+      "lastAccessed": 1791106815373,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

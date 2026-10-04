@@ -2,6 +2,7 @@ import uuid
 from datetime import date
 
 from django.core.cache import cache
+from django.test import override_settings
 from rest_framework.test import APIClient, APITestCase
 
 from apps.accounts.models import User
@@ -15,6 +16,8 @@ NEARBY = {"lat": 28.6290, "lng": 77.3649}
 FAR = {"lat": 28.5355, "lng": 77.3910}
 
 
+# Tests never reach a real geocoding provider. Subclasses opt in to a fake one.
+@override_settings(GEOCODER_BACKEND="apps.geo.geocoding.NullGeocoder")
 class ApiTestCase(APITestCase):
     _n = 0
 

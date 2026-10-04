@@ -27,7 +27,7 @@ python manage.py createsuperuser      # phone + password, for /admin/
 python manage.py runserver
 ```
 
-Tests (71, need a PostGIS database the user may create databases on):
+Tests (101, need a PostGIS database the user may create databases on):
 
 ```bash
 DEBUG=1 python manage.py test apps
@@ -41,7 +41,7 @@ The API is at `http://localhost:8000/api/v1/`, the admin at `/admin/`.
 | --- | --- |
 | `accounts` | User (phone sign-in), Device, OTP, export and delete |
 | `consents` | Per-purpose consent with full history and withdrawal effects |
-| `geo` | Locality |
+| `geo` | Locality, reverse geocoding adapter and its cache (GeocodeCell) |
 | `merchants` | Category, Payee, Merchant, PayeeMerchantLink, crowd matching |
 | `transactions` | Transaction, batch ingest, de-duplication |
 | `tagging` | Item catalogue, TransactionItem, TagWeight, suggestions |
@@ -113,6 +113,47 @@ Each result carries `status` (`created`, `duplicate`, `merged`), the stored tran
   train AI. A replaced guess is kept, marked rejected, so weights can be tuned against real answers.
 - **Prompts stop** after `AUTO_TAG_AFTER_CONFIRMATIONS` (3) confirmations of the same item at a payee.
 
+## Localities
+
+Localities are created automatically the first time a payment or a new shop lands somewhere
+that has none.
+
+- **Lookup first.** Ingest and payee resolve still do the synchronous lookup: a locality whose
+  boundary contains the point, else the nearest centre within `LOCALITY_FALLBACK_RADIUS_M` (3 km).
+- **Geocode once, in the background.** If nothing is found and the row has a stored location, the
+  Celery task `assign_locality` is queued after the commit. It reverse-geocodes the point, creates
+  the `Locality` (unique by name and city, centred on that point) and fills every transaction and
+  merchant at the same coarse point. The request never waits on the geocoder, so `locality` can be
+  null in the ingest response and filled a moment later.
+- **Cache.** `GeocodeCell` remembers the answer for each rounded coordinate (about 110 m), including
+  "no usable name", so a cell is looked up at most once. If the provider is unreachable nothing is
+  cached and the task retries up to 5 times with exponential backoff.
+- **Privacy.** The only thing sent to the geocoding provider is the rounded coordinate (3 decimals):
+  never a user id, a phone number or anything else. The `location` consent notice has to disclose
+  that this rounded coordinate is sent to a third-party geocoding provider. Rows without a stored
+  location, which includes every user without the `location` consent, are never geocoded.
+  `GeocodeCell` and `Locality` hold no user reference and stay when the consent is withdrawn.
+
+**Nominatim usage limits.** The default adapter calls the public OpenStreetMap Nominatim service,
+whose usage policy is mandatory: at most 1 request per second in total (enforced across all workers
+through Redis, with a per-process fallback if Redis is down), an identifying User-Agent, and no bulk
+geocoding. Set `NOMINATIM_USER_AGENT` to the app name and a contact, for example
+`ForReal/0.1 (you@example.com)`; no request is sent while it is empty. For real volume or a large
+backfill, run your own Nominatim and point `NOMINATIM_BASE_URL` at it.
+
+**Attribution.** Locality names come from OpenStreetMap data under the ODbL. The app must show
+"© OpenStreetMap contributors" wherever locality names appear.
+
+**Switching adapters.** `GEOCODER_BACKEND` is a dotted path to a class implementing the `Geocoder`
+contract in `apps/geo/geocoding.py`. `apps.geo.geocoding.NullGeocoder` switches geocoding off.
+`GoogleGeocoder` is a stub that documents the mapping to implement (key in `GOOGLE_MAPS_API_KEY`).
+After switching, retry the cells the old adapter could not name:
+
+```bash
+python manage.py backfill_localities                                  # queue every row with a location and no locality
+python manage.py backfill_localities --regeocode-provider nominatim   # first forget that provider's no_result cells
+```
+
 ## Known limits, on purpose
 
 - One answer per user per payee name. A user who pays two different people with the same name
@@ -120,10 +161,11 @@ Each result carries `status` (`created`, `duplicate`, `merged`), the stored tran
 - The LLM fallback for item guesses (`ai_llm`) is not built; suggestions stop at the category default.
 - Person-or-merchant inference (FR-9) and the daily prompt cap (app side) come later.
 - OTP delivery is a console logger. Plug a real SMS provider in through `OTP_SENDER`.
-- No localities are seeded. Add them in the admin; without them `locality` stays empty.
+- Localities are only as good as the geocoder's suburb-level names, and a point within 3 km of an
+  existing locality centre joins that locality instead of being geocoded.
 - Amount bands are the four from the product doc and are still an open question there.
 
 ## Before real users
 
 Set `DEBUG=0`, a long random `SECRET_KEY`, a separate `REF_HASH_PEPPER`, `OTP_ECHO_IN_RESPONSE=0`,
-real `ALLOWED_HOSTS`, and serve behind HTTPS.
+real `ALLOWED_HOSTS`, `NOMINATIM_USER_AGENT` with a real contact, and serve behind HTTPS.

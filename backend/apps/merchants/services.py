@@ -8,6 +8,7 @@ from apps.common.text import normalize_name
 from apps.consents.models import Purpose
 from apps.consents.services import users_with_consent
 from apps.geo.models import Locality
+from apps.geo.services import enqueue_locality
 
 from .models import Merchant, Payee, PayeeMerchantLink
 
@@ -73,7 +74,7 @@ def find_or_create_merchant(user, name, category, point=None, is_online=False) -
     existing = candidates.order_by("-sim").first()
     if existing:
         return existing
-    return Merchant.objects.create(
+    merchant = Merchant.objects.create(
         name=name.strip()[:120],
         normalized_name=norm[:120],
         category=category,
@@ -82,6 +83,9 @@ def find_or_create_merchant(user, name, category, point=None, is_online=False) -
         is_online=is_online,
         created_by=user,
     )
+    # No known locality here yet: resolve it in the background, never in the request.
+    enqueue_locality(merchant)
+    return merchant
 
 
 @transaction.atomic

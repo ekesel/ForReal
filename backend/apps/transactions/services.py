@@ -8,6 +8,7 @@ from apps.common.geo import coarse_point
 from apps.consents.models import Purpose
 from apps.consents.services import has_consent
 from apps.geo.models import Locality
+from apps.geo.services import enqueue_locality
 from apps.merchants.models import PayeeMerchantLink
 from apps.merchants.services import crowd_suggestions, get_or_create_payee
 from apps.tagging.services import auto_tag, should_prompt
@@ -26,9 +27,10 @@ def ingest_batch(user, rows):
     """Store a batch of parsed payments. Safe to retry: each row is idempotent."""
     use_location = has_consent(user, Purpose.LOCATION)
     links = {}
+    geocode_queued = set()  # coarse points already queued for geocoding in this batch
     results = []
     for row in rows:
-        results.append(_ingest_one(user, row, use_location, links))
+        results.append(_ingest_one(user, row, use_location, links, geocode_queued))
     return results
 
 
@@ -47,7 +49,7 @@ def _existing(user, row, ref_hash):
     return None, None
 
 
-def _ingest_one(user, row, use_location, links):
+def _ingest_one(user, row, use_location, links, geocode_queued):
     ref_hash = hash_ref(row.get("ref"))
     txn, status = _existing(user, row, ref_hash)
     if txn is None:
@@ -81,6 +83,9 @@ def _ingest_one(user, row, use_location, links):
             txn, status = _existing(user, row, ref_hash)
             if txn is None:
                 raise
+        else:
+            # No known locality here yet: resolve it in the background, never in the request.
+            enqueue_locality(txn, geocode_queued)
     return {"status": status, "transaction": txn}
 
 
